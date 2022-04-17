@@ -4,12 +4,13 @@
 
 Canvas canvas(100, 100);
 
-void onInit(CRules@ this)
+void onRestart(CRules@ this)
 {
-	print("Hello World!");
+	canvas.Clear();
 }
 
 void onRender(CRules@ this)
 {
+	canvas.Update();
 	canvas.Render();
 }
