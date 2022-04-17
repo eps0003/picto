@@ -168,7 +168,7 @@ class Canvas : ClickArea
 	{
 		Vec2f screenDim = getDriver().getScreenDimensions();
 		Vec2f dim = getDimensions();
-		return (screenDim - dim) / 2;
+		return (screenDim - dim) * 0.5f;
 	}
 
 	Vec2f getDimensions()

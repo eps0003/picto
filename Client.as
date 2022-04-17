@@ -1,5 +1,6 @@
 #include "Canvas.as"
 #include "Palette.as"
+#include "RulesCommon.as"
 
 #define CLIENT_ONLY
 
@@ -30,6 +31,9 @@ Vec2f prevMousePos;
 
 void DrawOnCanvas()
 {
+	CPlayer@ artist = getCurrentArtist();
+	if (artist is null || !artist.isMyPlayer()) return;
+
 	CControls@ controls = getControls();
 	Vec2f mousePos = canvas.getMousePosition();
 
