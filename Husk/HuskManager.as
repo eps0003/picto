@@ -27,6 +27,11 @@ void onPlayerLeave(CRules@ this, CPlayer@ player)
 	RemoveHusk(player);
 }
 
+void onPlayerDie(CRules@ this, CPlayer@ victim, CPlayer@ attacker, u8 customData)
+{
+	CreateHusk(victim);
+}
+
 void CreateHusk(CPlayer@ player)
 {
 	CBlob@ blob = server_CreateBlob("husk");
