@@ -1,6 +1,7 @@
 #include "Canvas.as"
 #include "Palette.as"
 #include "RulesCommon.as"
+#include "Utilities.as"
 
 #define CLIENT_ONLY
 
@@ -14,8 +15,13 @@ void onInit(CRules@ this)
 
 void onRestart(CRules@ this)
 {
-	@canvas = Canvas(100, 100);
+	@canvas = Canvas(400, 400);
 	canvas.Clear();
+}
+
+void onTick(CRules@ this)
+{
+	canvas.Sync();
 }
 
 void onRender(CRules@ this)
@@ -52,4 +58,16 @@ void DrawOnCanvas()
 	}
 
 	prevMousePos = mousePos;
+}
+
+void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
+{
+	if (cmd == this.getCommandID("sync canvas"))
+	{
+		CPlayer@ player;
+		if (!saferead_player(params, @player)) return;
+		if (player.isMyPlayer()) return;
+
+		canvas.deserialize(params);
+	}
 }

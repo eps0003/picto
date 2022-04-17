@@ -1,4 +1,6 @@
 #include "ClickArea.as"
+#include "CanvasAction.as"
+#include "RulesCommon.as"
 
 funcdef SColor COLOR_CALLBACK(int, int);
 
@@ -8,6 +10,7 @@ class Canvas : ClickArea
 	uint height;
 
 	Palette@ palette;
+	CanvasAction@[] actions;
 
 	Canvas(uint width, uint height)
 	{
@@ -22,11 +25,6 @@ class Canvas : ClickArea
 		Clear();
 
 		@palette = Palette();
-	}
-
-	void onClick()
-	{
-		print("Click canvas");
 	}
 
 	void Clear()
@@ -200,6 +198,12 @@ class Canvas : ClickArea
 		int x1 = Maths::Floor(end.x);
 		int y1 = Maths::Floor(end.y);
 
+		CPlayer@ artist = getCurrentArtist();
+		if (artist !is null && artist.isMyPlayer() && !isServer())
+		{
+			actions.push_back(LineAction(x0, y0, x1, y1, color));
+		}
+
 		int dx = Maths::Abs(x1 - x0);
 		int dy = Maths::Abs(y1 - y0);
 
@@ -250,6 +254,60 @@ class Canvas : ClickArea
 
 		palette.Render();
 	}
+
+	void Sync()
+	{
+		if (actions.empty()) return;
+
+		CPlayer@ artist = getCurrentArtist();
+		if (artist is null || !artist.isMyPlayer()) return;
+
+		CBitStream bs;
+		bs.write_netid(artist.getNetworkID());
+		Serialize(bs);
+		getRules().SendCommand(getRules().getCommandID("sync canvas"), bs, true);
+	}
+
+	void Serialize(CBitStream@ bs)
+	{
+		uint n = actions.size();
+		bs.write_u8(n);
+
+		for (uint i = 0; i < n; i++)
+		{
+			actions[i].Serialize(bs);
+		}
+		actions.clear();
+	}
+
+	bool deserialize(CBitStream@ bs)
+	{
+		u8 count;
+		if (!bs.saferead_u8(count)) return false;
+
+		for (uint i = 0; i < count; i++)
+		{
+			u8 type;
+			if (!bs.saferead_u8(type)) return false;
+
+			switch (type)
+			{
+				case CanvasActionType::Line:
+				{
+					LineAction action;
+					if (!action.deserialize(bs)) return false;
+					action.Execute(this);
+				}
+				break;
+
+				default:
+					return false;
+			}
+		}
+
+		print("Deserialized " + count + " action(s)");
+
+		return true;
 	}
 }
 
