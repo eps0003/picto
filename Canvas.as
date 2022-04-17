@@ -9,13 +9,17 @@ class Canvas
 	{
 		this.width = width;
 		this.height = height;
+
+		Texture::createBySize("canvas back", width, height);
+		Fill(getBackgroundColor, "canvas back");
+
 		Texture::createBySize("canvas", width, height);
 		Clear();
 	}
 
 	void Clear()
 	{
-		Fill(getBackgroundColor);
+		Fill(SColor(0, 0, 0, 0));
 	}
 
 	bool isValidPixel(int x, int y)
@@ -38,6 +42,15 @@ class Canvas
 		Texture::update("canvas", image);
 	}
 
+	void ErasePixel(int x, int y)
+	{
+		if (!isValidPixel(x, y)) return;
+
+		ImageData@ image = Texture::data("canvas");
+		image.put(x, y, SColor(0, 0, 0, 0));
+		Texture::update("canvas", image);
+	}
+
 	void Fill(SColor color)
 	{
 		ImageData@ image = Texture::data("canvas");
@@ -51,9 +64,9 @@ class Canvas
 		Texture::update("canvas", image);
 	}
 
-	void Fill(COLOR_CALLBACK@ colorCallback)
+	void Fill(COLOR_CALLBACK@ colorCallback, string texture = "canvas")
 	{
-		ImageData@ image = Texture::data("canvas");
+		ImageData@ image = Texture::data(texture);
 
 		for (uint x = 0; x < width; x++)
 		for (uint y = 0; y < height; y++)
@@ -61,7 +74,7 @@ class Canvas
 			image.put(x, y, colorCallback(x, y));
 		}
 
-		Texture::update("canvas", image);
+		Texture::update(texture, image);
 	}
 
 	void FillContiguous(int x, int y, SColor color)
@@ -165,6 +178,8 @@ class Canvas
 		);
 	}
 
+	private Vec2f prevMousePos = getMousePosition();
+
 	void Update()
 	{
 		CControls@ controls = getControls();
@@ -172,8 +187,56 @@ class Canvas
 
 		if (controls.isKeyPressed(KEY_LBUTTON))
 		{
-			SetPixel(mousePos.x, mousePos.y, SColor(255, 100, 100, 100));
+			Line(prevMousePos, mousePos, SColor(255, 200, 100, 100));
 		}
+		else if (controls.isKeyPressed(KEY_RBUTTON))
+		{
+			Line(prevMousePos, mousePos, SColor(0, 0, 0, 0));
+		}
+
+		prevMousePos = mousePos;
+	}
+
+	// Bresenham's line algorithm
+	// Reference: https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+	// Source: https://stackoverflow.com/a/4672319/10456572
+	private void Line(Vec2f start, Vec2f end, SColor color)
+	{
+		int x0 = Maths::Floor(start.x);
+		int y0 = Maths::Floor(start.y);
+		int x1 = Maths::Floor(end.x);
+		int y1 = Maths::Floor(end.y);
+
+		int dx = Maths::Abs(x1 - x0);
+		int dy = Maths::Abs(y1 - y0);
+
+		s8 sx = x0 < x1 ? 1 : -1;
+		s8 sy = y0 < y1 ? 1 : -1;
+
+		int err = dx - dy;
+
+		ImageData@ image = Texture::data("canvas");
+
+		while (isValidPixel(x0, y0))
+		{
+			image.put(x0, y0, color);
+
+			if (x0 == x1 && y0 == y1) break;
+
+			int e2 = 2 * err;
+			if (e2 > -dy)
+			{
+				err -= dy;
+				x0 += sx;
+			}
+			if (e2 < dx)
+			{
+				err += dx;
+				y0 += sy;
+			}
+		}
+
+		Texture::update("canvas", image);
 	}
 
 	void Render()
@@ -189,13 +252,14 @@ class Canvas
 		vertices.push_back(Vertex(pos.x + dim.x, pos.y + dim.y, 0, 1, 1, color_white));
 		vertices.push_back(Vertex(pos.x + dim.x, pos.y        , 0, 1, 0, color_white));
 
+		Render::RawQuads("canvas back", vertices);
 		Render::RawQuads("canvas", vertices);
 	}
 }
 
 SColor getBackgroundColor(int x, int y)
 {
-	return (x + y) % 2 == 0
-		? SColor(255, 100, 100, 100)
-		: SColor(255, 200, 200, 200);
+	return (x / 4 + y / 4) % 2 == 0
+		? SColor(255, 200, 200, 200)
+		: SColor(255, 180, 180, 180);
 }

@@ -2,7 +2,7 @@
 
 #define CLIENT_ONLY
 
-Canvas canvas(100, 100);
+Canvas canvas(200, 200);
 
 void onRestart(CRules@ this)
 {
