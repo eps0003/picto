@@ -1,12 +1,15 @@
+#include "ClickManager.as"
+
 funcdef SColor COLOR_CALLBACK(int, int);
 
-class Canvas
+class Canvas : ClickArea
 {
 	uint width;
 	uint height;
 
 	Canvas(uint width, uint height)
 	{
+		super(Vec2f(0, 0), Vec2f(99999, 99999));
 		this.width = width;
 		this.height = height;
 
@@ -15,6 +18,11 @@ class Canvas
 
 		Texture::createBySize("canvas", width, height);
 		Clear();
+	}
+
+	void onClick()
+	{
+		print("Click canvas");
 	}
 
 	void Clear()
@@ -185,14 +193,19 @@ class Canvas
 		CControls@ controls = getControls();
 		Vec2f mousePos = getMousePosition();
 
-		if (controls.isKeyPressed(KEY_LBUTTON))
+		if (controls.isKeyJustPressed(KEY_LBUTTON))
+		{
+			prevMousePos = mousePos;
+		}
+
+		if (isPressed())
 		{
 			Line(prevMousePos, mousePos, SColor(255, 200, 100, 100));
 		}
-		else if (controls.isKeyPressed(KEY_RBUTTON))
-		{
-			Line(prevMousePos, mousePos, SColor(0, 0, 0, 0));
-		}
+		// else if (controls.isKeyPressed(KEY_RBUTTON))
+		// {
+		// 	Line(prevMousePos, mousePos, SColor(0, 0, 0, 0));
+		// }
 
 		prevMousePos = mousePos;
 	}
