@@ -10,7 +10,7 @@ class ColorButton : ClickArea
 		this.color = color;
 	}
 
-	void onClick()
+	void onLeftClick()
 	{
 		print("Selected color: " + color.color);
 	}

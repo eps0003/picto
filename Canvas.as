@@ -193,19 +193,22 @@ class Canvas : ClickArea
 		CControls@ controls = getControls();
 		Vec2f mousePos = getMousePosition();
 
-		if (controls.isKeyJustPressed(KEY_LBUTTON))
-		{
-			prevMousePos = mousePos;
-		}
-
 		if (isPressed())
 		{
-			Line(prevMousePos, mousePos, SColor(255, 200, 100, 100));
+			if (controls.isKeyJustPressed(KEY_LBUTTON) || controls.isKeyPressed(KEY_RBUTTON))
+			{
+				prevMousePos = mousePos;
+			}
+
+			if (controls.isKeyPressed(KEY_LBUTTON))
+			{
+				Line(prevMousePos, mousePos, SColor(255, 200, 100, 100));
+			}
+			else if (controls.isKeyPressed(KEY_RBUTTON))
+			{
+				Line(prevMousePos, mousePos, SColor(0, 0, 0, 0));
+			}
 		}
-		// else if (controls.isKeyPressed(KEY_RBUTTON))
-		// {
-		// 	Line(prevMousePos, mousePos, SColor(0, 0, 0, 0));
-		// }
 
 		prevMousePos = mousePos;
 	}

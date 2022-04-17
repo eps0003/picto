@@ -4,6 +4,7 @@ class ClickManager
 {
 	ClickArea@[] areas;
 	ClickArea@ currentArea;
+	int currentKey;
 	CControls@ controls = getControls();
 
 	void Listen(ClickArea@ area)
@@ -24,31 +25,64 @@ class ClickManager
 	{
 		Vec2f mousePos = controls.getMouseScreenPos();
 
-		if (controls.isKeyJustPressed(KEY_LBUTTON))
+		if (currentArea is null)
 		{
-			for (uint i = 0; i < areas.size(); i++)
+			if (controls.isKeyJustPressed(KEY_LBUTTON))
 			{
-				ClickArea@ area = areas[i];
-				if (area.containsMouse())
+				for (uint i = 0; i < areas.size(); i++)
 				{
-					@currentArea = @area;
-					currentArea.onDown();
+					ClickArea@ area = areas[i];
+					if (area.containsMouse())
+					{
+						@currentArea = @area;
+						currentKey = KEY_LBUTTON;
+						currentArea.onLeftDown();
+					}
+				}
+			}
+			else if (controls.isKeyJustPressed(KEY_RBUTTON))
+			{
+				for (uint i = 0; i < areas.size(); i++)
+				{
+					ClickArea@ area = areas[i];
+					if (area.containsMouse())
+					{
+						@currentArea = @area;
+						currentKey = KEY_RBUTTON;
+						currentArea.onRightDown();
+					}
 				}
 			}
 		}
-
-		if (currentArea !is null)
+		else
 		{
-			if (controls.isKeyJustReleased(KEY_LBUTTON))
+			if (currentKey == KEY_LBUTTON)
 			{
-				if (currentArea.containsMouse())
+				if (controls.isKeyJustReleased(KEY_LBUTTON))
 				{
-					currentArea.onClick();
+					if (currentArea.containsMouse())
+					{
+						currentArea.onLeftClick();
+					}
+				}
+				else if (!controls.isKeyPressed(KEY_LBUTTON))
+				{
+					@currentArea = null;
 				}
 			}
-			else if (!controls.isKeyPressed(KEY_LBUTTON))
+			else if (currentKey == KEY_RBUTTON)
 			{
-				@currentArea = null;
+				if (controls.isKeyJustReleased(KEY_RBUTTON))
+				{
+					if (currentArea.containsMouse())
+					{
+						currentArea.onRightClick();
+					}
+				}
+				else if (!controls.isKeyPressed(KEY_RBUTTON))
+				{
+					@currentArea = null;
+				}
 			}
 		}
 	}
@@ -60,22 +94,7 @@ class ClickManager
 
 	bool isPressed(ClickArea@ area)
 	{
-		return currentArea is area && controls.isKeyPressed(KEY_LBUTTON);
-	}
-
-	bool isMousePressed()
-	{
-		return currentArea is null && controls.isKeyPressed(KEY_LBUTTON);
-	}
-
-	bool isMouseJustPressed()
-	{
-		return currentArea is null && controls.isKeyJustPressed(KEY_LBUTTON);
-	}
-
-	bool isMouseJustReleased()
-	{
-		return currentArea is null && controls.isKeyJustReleased(KEY_LBUTTON);
+		return currentArea is area;
 	}
 }
 

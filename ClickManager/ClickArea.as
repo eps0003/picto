@@ -31,6 +31,9 @@ class ClickArea
 		return clickManager.isPressed(this);
 	}
 
-	void onDown() {}
-	void onClick() {}
+	void onLeftDown() {}
+	void onRightDown() {}
+
+	void onLeftClick() {}
+	void onRightClick() {}
 }
