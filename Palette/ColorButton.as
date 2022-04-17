@@ -1,18 +1,20 @@
-#include "ClickManager.as"
+#include "ClickArea.as"
 
 class ColorButton : ClickArea
 {
+	Palette@ palette;
 	SColor color;
 
-	ColorButton(Vec2f pos, Vec2f size, SColor color)
+	ColorButton(Palette@ palette, Vec2f pos, Vec2f size, SColor color)
 	{
 		super(pos, size, 1);
+		@this.palette = palette;
 		this.color = color;
 	}
 
 	void onLeftClick()
 	{
-		print("Selected color: " + color.color);
+		palette.SetSelectedColor(color);
 	}
 
 	void Render()

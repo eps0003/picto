@@ -1,4 +1,4 @@
-#include "ClickManager.as"
+#include "ClickArea.as"
 
 funcdef SColor COLOR_CALLBACK(int, int);
 
@@ -6,6 +6,8 @@ class Canvas : ClickArea
 {
 	uint width;
 	uint height;
+
+	Palette@ palette;
 
 	Canvas(uint width, uint height)
 	{
@@ -18,6 +20,8 @@ class Canvas : ClickArea
 
 		Texture::createBySize("canvas", width, height);
 		Clear();
+
+		@palette = Palette();
 	}
 
 	void onClick()
@@ -186,37 +190,10 @@ class Canvas : ClickArea
 		);
 	}
 
-	private Vec2f prevMousePos = getMousePosition();
-
-	void Update()
-	{
-		CControls@ controls = getControls();
-		Vec2f mousePos = getMousePosition();
-
-		if (isPressed())
-		{
-			if (controls.isKeyJustPressed(KEY_LBUTTON) || controls.isKeyPressed(KEY_RBUTTON))
-			{
-				prevMousePos = mousePos;
-			}
-
-			if (controls.isKeyPressed(KEY_LBUTTON))
-			{
-				Line(prevMousePos, mousePos, SColor(255, 200, 100, 100));
-			}
-			else if (controls.isKeyPressed(KEY_RBUTTON))
-			{
-				Line(prevMousePos, mousePos, SColor(0, 0, 0, 0));
-			}
-		}
-
-		prevMousePos = mousePos;
-	}
-
 	// Bresenham's line algorithm
 	// Reference: https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 	// Source: https://stackoverflow.com/a/4672319/10456572
-	private void Line(Vec2f start, Vec2f end, SColor color)
+	void DrawLine(Vec2f start, Vec2f end, SColor color)
 	{
 		int x0 = Maths::Floor(start.x);
 		int y0 = Maths::Floor(start.y);

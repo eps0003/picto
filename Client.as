@@ -21,7 +21,34 @@ void onRestart(CRules@ this)
 
 void onRender(CRules@ this)
 {
-	canvas.Update();
+	DrawOnCanvas();
 	canvas.Render();
 	palette.Render();
+}
+
+Vec2f prevMousePos;
+
+void DrawOnCanvas()
+{
+	CControls@ controls = getControls();
+	Vec2f mousePos = canvas.getMousePosition();
+
+	if (canvas.isPressed())
+	{
+		if (controls.isKeyJustPressed(KEY_LBUTTON) || controls.isKeyPressed(KEY_RBUTTON))
+		{
+			prevMousePos = mousePos;
+		}
+
+		if (controls.isKeyPressed(KEY_LBUTTON))
+		{
+			canvas.DrawLine(prevMousePos, mousePos, palette.getSelectedColor());
+		}
+		else if (controls.isKeyPressed(KEY_RBUTTON))
+		{
+			canvas.DrawLine(prevMousePos, mousePos, SColor(0, 0, 0, 0));
+		}
+	}
+
+	prevMousePos = mousePos;
 }

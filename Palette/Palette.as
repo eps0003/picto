@@ -4,12 +4,19 @@
 class Palette
 {
 	SColor[] colors = {
-		SColor(255, 255, 100, 100),
-		SColor(255, 100, 255, 100),
-		SColor(255, 100, 100, 255)
+		SColor(255, 229, 59, 68),	// Red
+		SColor(255, 255, 173, 52),	// Orange
+		SColor(255, 255, 231, 98),	// Yellow
+		SColor(255, 99, 198, 77),	// Lime
+		SColor(255, 38, 92, 66),	// Dark green
+		SColor(255, 0, 149, 233),	// Light blue
+		SColor(255, 18, 79, 136),	// Dark blue
+		SColor(255, 104, 55, 108),	// Purple
+		SColor(255, 24, 20, 37)		// Dark purple
 	};
 
-	ColorButton@[] buttons;
+	private ColorButton@[] buttons;
+	private SColor selectedColor = colors[0];
 
 	Palette()
 	{
@@ -28,9 +35,20 @@ class Palette
 			int x = screenDim.x * 0.5f + index * (size.x + spacing) - size.x * 0.5f;
 			int y = screenDim.y - size.y - margin;
 
-			ColorButton@ button = ColorButton(Vec2f(x, y), size, colors[i]);
+			ColorButton@ button = ColorButton(this, Vec2f(x, y), size, colors[i]);
 			buttons.push_back(button);
 		}
+	}
+
+	void SetSelectedColor(SColor color)
+	{
+		print("Selected color: " + color.color);
+		selectedColor = color;
+	}
+
+	SColor getSelectedColor()
+	{
+		return selectedColor;
 	}
 
 	void Render()
