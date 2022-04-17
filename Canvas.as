@@ -247,6 +247,9 @@ class Canvas : ClickArea
 
 		Render::RawQuads("canvas back", vertices);
 		Render::RawQuads("canvas", vertices);
+
+		palette.Render();
+	}
 	}
 }
 

@@ -5,7 +5,6 @@
 #define CLIENT_ONLY
 
 Canvas@ canvas;
-Palette@ palette;
 
 void onInit(CRules@ this)
 {
@@ -15,8 +14,7 @@ void onInit(CRules@ this)
 
 void onRestart(CRules@ this)
 {
-	@canvas = Canvas(200, 200);
-	@palette = Palette();
+	@canvas = Canvas(100, 100);
 	canvas.Clear();
 }
 
@@ -24,7 +22,6 @@ void onRender(CRules@ this)
 {
 	DrawOnCanvas();
 	canvas.Render();
-	palette.Render();
 }
 
 Vec2f prevMousePos;
@@ -46,7 +43,7 @@ void DrawOnCanvas()
 
 		if (controls.isKeyPressed(KEY_LBUTTON))
 		{
-			canvas.DrawLine(prevMousePos, mousePos, palette.getSelectedColor());
+			canvas.DrawLine(prevMousePos, mousePos, canvas.palette.getSelectedColor());
 		}
 		else if (controls.isKeyPressed(KEY_RBUTTON))
 		{
