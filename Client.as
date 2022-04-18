@@ -9,8 +9,9 @@ Canvas@ canvas;
 
 void onInit(CRules@ this)
 {
-	onRestart(this);
+	Render::addScript(Render::layer_prehud, "Client.as", "Render", 0);
 	getHUD().SetCursorOffset(Vec2f(-5, -5));
+	onRestart(this);
 }
 
 void onRestart(CRules@ this)
@@ -24,10 +25,13 @@ void onTick(CRules@ this)
 	canvas.Sync();
 }
 
-void onRender(CRules@ this)
+void Render(int)
 {
-	DrawOnCanvas();
-	canvas.Render();
+	if (canvas !is null)
+	{
+		DrawOnCanvas();
+		canvas.Render();
+	}
 }
 
 Vec2f prevMousePos;
