@@ -214,9 +214,12 @@ class Canvas : ClickArea
 
 		ImageData@ image = Texture::data("canvas");
 
-		while (isValidPixel(x0, y0))
+		while (true)
 		{
-			image.put(x0, y0, color);
+			if (isValidPixel(x0, y0))
+			{
+				image.put(x0, y0, color);
+			}
 
 			if (x0 == x1 && y0 == y1) break;
 
