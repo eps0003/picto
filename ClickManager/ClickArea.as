@@ -1,3 +1,5 @@
+#include "ClickManager.as"
+
 class ClickArea
 {
 	Vec2f pos;

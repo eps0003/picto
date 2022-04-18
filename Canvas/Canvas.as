@@ -1,6 +1,7 @@
 #include "ClickArea.as"
 #include "CanvasAction.as"
 #include "RulesCommon.as"
+#include "Palette.as"
 
 funcdef SColor COLOR_CALLBACK(int, int);
 
@@ -10,7 +11,9 @@ class Canvas : ClickArea
 	uint height;
 
 	Palette@ palette;
-	CanvasAction@[] actions;
+
+	CanvasAction@[] actionsToSync;
+	CanvasAction@[] actionsToExecute;
 
 	Canvas(uint width, uint height)
 	{
@@ -198,11 +201,7 @@ class Canvas : ClickArea
 		int x1 = Maths::Floor(end.x);
 		int y1 = Maths::Floor(end.y);
 
-		CPlayer@ artist = getCurrentArtist();
-		if (artist !is null && artist.isMyPlayer() && !isServer())
-		{
-			actions.push_back(LineAction(x0, y0, x1, y1, color));
-		}
+		QueueAction(LineAction(x0, y0, x1, y1, color));
 
 		int dx = Maths::Abs(x1 - x0);
 		int dy = Maths::Abs(y1 - y0);
@@ -239,9 +238,23 @@ class Canvas : ClickArea
 		Texture::update("canvas", image);
 	}
 
+	private void QueueAction(CanvasAction@ action)
+	{
+		if (isMyCanvas())
+		{
+			actionsToSync.push_back(action);
+		}
+	}
+
 	void Render()
 	{
 		Render::SetTransformScreenspace();
+
+		if (actionsToExecute.size() > 0)
+		{
+			actionsToExecute[0].Execute(this);
+			actionsToExecute.removeAt(0);
+		}
 
 		Vec2f pos = getPosition();
 		Vec2f dim = getDimensions();
@@ -258,35 +271,38 @@ class Canvas : ClickArea
 		palette.Render();
 	}
 
+	bool isMyCanvas()
+	{
+		CPlayer@ artist = getCurrentArtist();
+		return artist !is null && artist.isMyPlayer();
+	}
+
 	void Sync()
 	{
-		if (actions.empty()) return;
-
-		CPlayer@ artist = getCurrentArtist();
-		if (artist is null || !artist.isMyPlayer()) return;
+		if (actionsToSync.empty() || !isMyCanvas() || isServer()) return;
 
 		CBitStream bs;
-		bs.write_netid(artist.getNetworkID());
+		bs.write_netid(getLocalPlayer().getNetworkID());
 		Serialize(bs);
 		getRules().SendCommand(getRules().getCommandID("sync canvas"), bs, true);
 	}
 
 	void Serialize(CBitStream@ bs)
 	{
-		uint n = actions.size();
-		bs.write_u8(n);
+		uint n = actionsToSync.size();
+		bs.write_u32(n);
 
 		for (uint i = 0; i < n; i++)
 		{
-			actions[i].Serialize(bs);
+			actionsToSync[i].Serialize(bs);
 		}
-		actions.clear();
+		actionsToSync.clear();
 	}
 
 	bool deserialize(CBitStream@ bs)
 	{
-		u8 count;
-		if (!bs.saferead_u8(count)) return false;
+		uint count;
+		if (!bs.saferead_u32(count)) return false;
 
 		for (uint i = 0; i < count; i++)
 		{
@@ -299,16 +315,13 @@ class Canvas : ClickArea
 				{
 					LineAction action;
 					if (!action.deserialize(bs)) return false;
-					action.Execute(this);
+					actionsToExecute.push_back(action);
 				}
-				break;
-
-				default:
-					return false;
+				continue;
 			}
-		}
 
-		print("Deserialized " + count + " action(s)");
+			return false;
+		}
 
 		return true;
 	}
@@ -319,4 +332,18 @@ SColor getBackgroundColor(int x, int y)
 	return (x / 4 + y / 4) % 2 == 0
 		? SColor(255, 200, 200, 200)
 		: SColor(255, 180, 180, 180);
+}
+
+namespace Canvas
+{
+	Canvas@ get()
+	{
+		Canvas@ canvas;
+		if (!getRules().get("canvas", @canvas))
+		{
+			@canvas = Canvas(400, 400);
+			getRules().set("canvas", @canvas);
+		}
+		return canvas;
+	}
 }

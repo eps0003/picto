@@ -1,5 +1,4 @@
 #include "Canvas.as"
-#include "Palette.as"
 #include "RulesCommon.as"
 #include "Utilities.as"
 
@@ -16,7 +15,7 @@ void onInit(CRules@ this)
 
 void onRestart(CRules@ this)
 {
-	@canvas = Canvas(400, 400);
+	@canvas = Canvas::get();
 	canvas.Clear();
 }
 
@@ -72,6 +71,10 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 		if (!saferead_player(params, @player)) return;
 		if (player.isMyPlayer()) return;
 
+		canvas.deserialize(params);
+	}
+	else if (cmd == this.getCommandID("sync entire canvas"))
+	{
 		canvas.deserialize(params);
 	}
 }
