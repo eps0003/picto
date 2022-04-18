@@ -1,5 +1,6 @@
 #include "RulesCommon.as"
 #include "CanvasAction.as"
+#include "CanvasSync.as"
 
 #define SERVER_ONLY
 
@@ -7,12 +8,18 @@ CanvasAction@[] actions;
 
 void onNewPlayerJoin(CRules@ this, CPlayer@ player)
 {
+	// Temporary until game rules are implemented
 	if (getCurrentArtist() is null)
 	{
 		SetCurrentArtist(player);
 	}
 
-	SyncEntireCanvas(this, player);
+	if (actions.size() > 0)
+	{
+		CBitStream bs;
+		SerializeCanvasActions(bs, actions);
+		this.SendCommand(this.getCommandID("sync entire canvas"), bs, player);
+	}
 }
 
 void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
@@ -23,50 +30,6 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 		if (!saferead_player(params, @player)) return;
 		if (player.isMyPlayer()) return;
 
-		deserialize(params);
+		deserializeCanvasActions(params, actions);
 	}
-}
-
-void SyncEntireCanvas(CRules@ this, CPlayer@ player)
-{
-	uint n = actions.size();
-	if (n == 0) return;
-
-	CBitStream bs;
-	bs.write_u32(n);
-	print("Sending " + n + " actions");
-
-	for (uint i = 0; i < n; i++)
-	{
-		actions[i].Serialize(bs);
-	}
-
-	this.SendCommand(this.getCommandID("sync entire canvas"), bs, player);
-}
-
-bool deserialize(CBitStream@ bs)
-{
-	u32 count;
-	if (!bs.saferead_u32(count)) return false;
-
-	for (uint i = 0; i < count; i++)
-	{
-		u8 type;
-		if (!bs.saferead_u8(type)) return false;
-
-		switch (type)
-		{
-			case CanvasActionType::Line:
-			{
-				LineAction action;
-				if (!action.deserialize(bs)) return false;
-				actions.push_back(action);
-			}
-			continue;
-		}
-
-		return false;
-	}
-
-	return true;
 }

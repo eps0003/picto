@@ -2,6 +2,7 @@
 #include "CanvasAction.as"
 #include "RulesCommon.as"
 #include "Palette.as"
+#include "CanvasSync.as"
 
 funcdef SColor COLOR_CALLBACK(int, int);
 
@@ -21,8 +22,7 @@ class Canvas : ClickArea
 		this.width = width;
 		this.height = height;
 
-		Texture::createBySize("canvas back", width, height);
-		Fill(getBackgroundColor, "canvas back");
+		GenerateBackground();
 
 		Texture::createBySize("canvas", width, height);
 		Clear();
@@ -30,9 +30,20 @@ class Canvas : ClickArea
 		@palette = Palette();
 	}
 
-	void Clear()
+	private void GenerateBackground()
 	{
-		Fill(SColor(0, 0, 0, 0));
+		ImageData image(width, height);
+
+		SColor color1(255, 200, 200, 200);
+		SColor color2(255, 180, 180, 180);
+
+		for (uint x = 0; x < width; x++)
+		for (uint y = 0; y < height; y++)
+		{
+			image.put(x, y, (x / 4 + y / 4) % 2 == 0 ? color1 : color2);
+		}
+
+		Texture::createFromData("canvas back", image);
 	}
 
 	bool isValidPixel(int x, int y)
@@ -42,26 +53,18 @@ class Canvas : ClickArea
 
 	SColor getPixel(int x, int y)
 	{
-		ImageData@ image = Texture::data("canvas");
-		return image.get(x, y);
+		return Texture::data("canvas").get(x, y);
 	}
 
-	void SetPixel(int x, int y, SColor color)
+	void DrawPoint(int x, int y, SColor color)
 	{
 		if (!isValidPixel(x, y)) return;
 
 		ImageData@ image = Texture::data("canvas");
 		image.put(x, y, color);
 		Texture::update("canvas", image);
-	}
 
-	void ErasePixel(int x, int y)
-	{
-		if (!isValidPixel(x, y)) return;
-
-		ImageData@ image = Texture::data("canvas");
-		image.put(x, y, SColor(0, 0, 0, 0));
-		Texture::update("canvas", image);
+		QueueAction(PointAction(x, y, color));
 	}
 
 	void Fill(SColor color)
@@ -75,6 +78,8 @@ class Canvas : ClickArea
 		}
 
 		Texture::update("canvas", image);
+
+		QueueAction(FillAction(color));
 	}
 
 	void Fill(COLOR_CALLBACK@ colorCallback, string texture = "canvas")
@@ -97,6 +102,8 @@ class Canvas : ClickArea
 		ImageData@ image = Texture::data("canvas");
 		FillContiguous(x, y, color, image);
 		Texture::update("canvas", image);
+
+		QueueAction(FillContiguousAction(x, y, color));
 	}
 
 	private void FillContiguous(int x, int y, SColor color, ImageData@ image)
@@ -127,42 +134,9 @@ class Canvas : ClickArea
 		}
 	}
 
-	void FillContiguous(int x, int y, COLOR_CALLBACK@ colorCallback)
+	void Clear()
 	{
-		if (!isValidPixel(x, y)) return;
-
-		ImageData@ image = Texture::data("canvas");
-		FillContiguous(x, y, colorCallback, image);
-		Texture::update("canvas", image);
-	}
-
-	private void FillContiguous(int x, int y, COLOR_CALLBACK@ colorCallback, ImageData@ image)
-	{
-		SColor oldColor = image.get(x, y);
-		SColor color = colorCallback(x, y);
-		if (oldColor == color) return;
-
-		image.put(x, y, color);
-
-		if (x > 0 && image.get(x - 1, y) == oldColor)
-		{
-			FillContiguous(x - 1, y, colorCallback);
-		}
-
-		if (y > 0 && image.get(x, y - 1) == oldColor)
-		{
-			FillContiguous(x, y - 1, colorCallback);
-		}
-
-		if (x < width - 1 && image.get(x + 1, y) == oldColor)
-		{
-			FillContiguous(x + 1, y, colorCallback);
-		}
-
-		if (y < height - 1 && image.get(x, y + 1) == oldColor)
-		{
-			FillContiguous(x, y + 1, colorCallback);
-		}
+		Fill(0);
 	}
 
 	Vec2f getPosition()
@@ -285,53 +259,19 @@ class Canvas : ClickArea
 		bs.write_netid(getLocalPlayer().getNetworkID());
 		Serialize(bs);
 		getRules().SendCommand(getRules().getCommandID("sync canvas"), bs, true);
+
+		actionsToSync.clear();
 	}
 
 	void Serialize(CBitStream@ bs)
 	{
-		uint n = actionsToSync.size();
-		bs.write_u32(n);
-
-		for (uint i = 0; i < n; i++)
-		{
-			actionsToSync[i].Serialize(bs);
-		}
-		actionsToSync.clear();
+		SerializeCanvasActions(bs, actionsToSync);
 	}
 
 	bool deserialize(CBitStream@ bs)
 	{
-		uint count;
-		if (!bs.saferead_u32(count)) return false;
-
-		for (uint i = 0; i < count; i++)
-		{
-			u8 type;
-			if (!bs.saferead_u8(type)) return false;
-
-			switch (type)
-			{
-				case CanvasActionType::Line:
-				{
-					LineAction action;
-					if (!action.deserialize(bs)) return false;
-					actionsToExecute.push_back(action);
-				}
-				continue;
-			}
-
-			return false;
-		}
-
-		return true;
+		return deserializeCanvasActions(bs, actionsToExecute);
 	}
-}
-
-SColor getBackgroundColor(int x, int y)
-{
-	return (x / 4 + y / 4) % 2 == 0
-		? SColor(255, 200, 200, 200)
-		: SColor(255, 180, 180, 180);
 }
 
 namespace Canvas
