@@ -45,18 +45,32 @@ void DrawOnCanvas()
 
 	if (canvas.isPressed())
 	{
-		if (controls.isKeyJustPressed(KEY_LBUTTON) || controls.isKeyPressed(KEY_RBUTTON))
+		if (controls.isKeyJustPressed(KEY_LBUTTON) || controls.isKeyJustPressed(KEY_RBUTTON))
 		{
 			prevMousePos = mousePos;
 		}
 
 		if (controls.isKeyPressed(KEY_LBUTTON))
 		{
-			canvas.DrawLine(prevMousePos, mousePos, canvas.palette.getSelectedColor());
+			canvas.DrawLine(
+				Maths::Floor(prevMousePos.x),
+				Maths::Floor(prevMousePos.y),
+				Maths::Floor(mousePos.x),
+				Maths::Floor(mousePos.y),
+				canvas.palette.getSelectedColor(),
+				3
+			);
 		}
 		else if (controls.isKeyPressed(KEY_RBUTTON))
 		{
-			canvas.DrawLine(prevMousePos, mousePos, SColor(0, 0, 0, 0));
+			canvas.DrawLine(
+				Maths::Floor(prevMousePos.x),
+				Maths::Floor(prevMousePos.y),
+				Maths::Floor(mousePos.x),
+				Maths::Floor(mousePos.y),
+				0,
+				3
+			);
 		}
 	}
 

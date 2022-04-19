@@ -56,14 +56,16 @@ class LineAction : CanvasAction
 {
 	int x0, y0, x1, y1;
 	SColor color;
+	u8 r;
 
-	LineAction(int x0, int y0, int x1, int y1, SColor color)
+	LineAction(int x0, int y0, int x1, int y1, SColor color, u8 r)
 	{
 		this.x0 = x0;
 		this.y0 = y0;
 		this.x1 = x1;
 		this.y1 = y1;
 		this.color = color;
+		this.r = r;
 	}
 
 	void Serialize(CBitStream@ bs)
@@ -74,6 +76,7 @@ class LineAction : CanvasAction
 		bs.write_s16(x1);
 		bs.write_s16(y1);
 		bs.write_u32(color.color);
+		bs.write_u8(r);
 	}
 
 	bool deserialize(CBitStream@ bs)
@@ -83,12 +86,13 @@ class LineAction : CanvasAction
 		if (!bs.saferead_s16(x1)) return false;
 		if (!bs.saferead_s16(y1)) return false;
 		if (!saferead_color(bs, color)) return false;
+		if (!bs.saferead_u8(r)) return false;
 		return true;
 	}
 
 	void Execute(Canvas@ canvas)
 	{
-		canvas.DrawLine(Vec2f(x0, y0), Vec2f(x1, y1), color);
+		canvas.DrawLine(x0, y0, x1, y1, color, r);
 	}
 }
 

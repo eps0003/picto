@@ -152,17 +152,39 @@ class Canvas : ClickArea
 		);
 	}
 
+	void DrawFilledRect(int x0, int y0, int x1, int y1, SColor color)
+	{
+		ImageData@ image = Texture::data("canvas");
+
+		if (x0 > x1)
+		{
+			int temp = x0;
+			x0 = x1;
+			x1 = temp;
+		}
+
+		if (y0 > y1)
+		{
+			int temp = y0;
+			y0 = y1;
+			y1 = temp;
+		}
+
+		for (int x = x0; x <= x1; x++)
+		for (int y = y0; y <= y1; y++)
+		{
+			image.put(x, y, color);
+		}
+
+		Texture::update("canvas", image);
+	}
+
 	// Bresenham's line algorithm
 	// Reference: https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 	// Source: https://stackoverflow.com/a/4672319/10456572
-	void DrawLine(Vec2f start, Vec2f end, SColor color)
+	void DrawLine(int x0, int y0, int x1, int y1, SColor color, u8 r = 1)
 	{
-		int x0 = Maths::Floor(start.x);
-		int y0 = Maths::Floor(start.y);
-		int x1 = Maths::Floor(end.x);
-		int y1 = Maths::Floor(end.y);
-
-		QueueAction(LineAction(x0, y0, x1, y1, color));
+		QueueAction(LineAction(x0, y0, x1, y1, color, r));
 
 		int dx = Maths::Abs(x1 - x0);
 		int dy = Maths::Abs(y1 - y0);
@@ -171,14 +193,23 @@ class Canvas : ClickArea
 		s8 sy = y0 < y1 ? 1 : -1;
 
 		int err = dx - dy;
+		uint rSq = r * r;
 
 		ImageData@ image = Texture::data("canvas");
 
 		while (true)
 		{
-			if (isValidPixel(x0, y0))
+			for (int x = x0 - r; x <= x0 + r; x++)
+			for (int y = y0 - r; y <= y0 + r; y++)
 			{
-				image.put(x0, y0, color);
+				uint distX = Maths::Abs(x - x0);
+				uint distY = Maths::Abs(y - y0);
+				uint distSq = distX * distX + distY * distY;
+
+				if (isValidPixel(x, y) && distSq <= rSq)
+				{
+					image.put(x, y, color);
+				}
 			}
 
 			if (x0 == x1 && y0 == y1) break;
