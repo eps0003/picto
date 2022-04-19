@@ -82,19 +82,6 @@ class Canvas : ClickArea
 		QueueAction(FillAction(color));
 	}
 
-	void Fill(COLOR_CALLBACK@ colorCallback, string texture = "canvas")
-	{
-		ImageData@ image = Texture::data(texture);
-
-		for (uint x = 0; x < width; x++)
-		for (uint y = 0; y < height; y++)
-		{
-			image.put(x, y, colorCallback(x, y));
-		}
-
-		Texture::update(texture, image);
-	}
-
 	void FillContiguous(int x, int y, SColor color)
 	{
 		if (!isValidPixel(x, y)) return;
