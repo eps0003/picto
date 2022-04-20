@@ -1,10 +1,11 @@
 #include "Canvas.as"
-#include "RulesCommon.as"
+#include "ArtistQueue.as"
 #include "Utilities.as"
 
 #define CLIENT_ONLY
 
 Canvas@ canvas;
+ArtistQueue@ queue;
 
 void onInit(CRules@ this)
 {
@@ -15,7 +16,9 @@ void onInit(CRules@ this)
 
 void onRestart(CRules@ this)
 {
+	this.set("canvas", null);
 	@canvas = Canvas::get();
+	@queue = ArtistQueue::get();
 	canvas.Clear();
 }
 
@@ -37,7 +40,7 @@ Vec2f prevMousePos;
 
 void DrawOnCanvas()
 {
-	CPlayer@ artist = getCurrentArtist();
+	CPlayer@ artist = queue.getCurrentArtist();
 	if (artist is null || !artist.isMyPlayer()) return;
 
 	CControls@ controls = getControls();

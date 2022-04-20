@@ -1,8 +1,8 @@
 #include "ClickArea.as"
 #include "CanvasAction.as"
-#include "RulesCommon.as"
 #include "Palette.as"
 #include "CanvasSync.as"
+#include "ArtistQueue.as"
 
 funcdef SColor COLOR_CALLBACK(int, int);
 
@@ -260,21 +260,25 @@ class Canvas : ClickArea
 		Render::RawQuads("canvas back", vertices);
 		Render::RawQuads("canvas", vertices);
 
-		palette.Render();
+		if (isMyCanvas())
+		{
+			palette.Render();
+		}
 	}
 
 	bool isMyCanvas()
 	{
-		CPlayer@ artist = getCurrentArtist();
+		CPlayer@ artist = ArtistQueue::get().getCurrentArtist();
 		return artist !is null && artist.isMyPlayer();
 	}
 
 	void Sync()
 	{
-		if (actionsToSync.empty() || !isMyCanvas() || isServer()) return;
+		CPlayer@ me = getLocalPlayer();
+		if (me is null || actionsToSync.empty() || !isMyCanvas() || isServer()) return;
 
 		CBitStream bs;
-		bs.write_netid(getLocalPlayer().getNetworkID());
+		bs.write_netid(me.getNetworkID());
 		Serialize(bs);
 		getRules().SendCommand(getRules().getCommandID("sync canvas"), bs, true);
 
