@@ -110,6 +110,24 @@ class ArtistQueue
 		index = 0;
 	}
 
+	void Render()
+	{
+		GUI::SetFont("menu");
+
+		CPlayer@[] queue = getQueue();
+		CPlayer@ artist = getCurrentArtist();
+		for (uint i = 0; i < queue.size(); i++)
+		{
+			CPlayer@ p = queue[i];
+			string text = p.getUsername();
+			if (p is artist)
+			{
+				text += " (artist)";
+			}
+			GUI::DrawText(text, Vec2f(20, 20 + i * 20), color_white);
+		}
+	}
+
 	void Sync()
 	{
 		CBitStream bs;

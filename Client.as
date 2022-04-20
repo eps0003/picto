@@ -33,6 +33,7 @@ void Render(int)
 	{
 		DrawOnCanvas();
 		canvas.Render();
+		queue.Render();
 	}
 }
 

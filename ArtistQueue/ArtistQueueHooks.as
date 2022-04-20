@@ -38,3 +38,14 @@ void onCommand(CRules@ this, u8 cmd, CBitStream@ params)
 		queue.deserialize(params);
 	}
 }
+
+bool onServerProcessChat(CRules@ this, const string &in textIn, string &out textOut, CPlayer@ player)
+{
+	if (textIn == "next")
+	{
+		queue.Next();
+		queue.Sync();
+		return false;
+	}
+	return true;
+}
