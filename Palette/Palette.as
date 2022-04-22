@@ -20,7 +20,6 @@ class Palette
 
 	Palette()
 	{
-		ClickManager@ clickManager = ClickManager::get();
 		Vec2f screenDim = getDriver().getScreenDimensions();
 
 		Vec2f size(60, 60);

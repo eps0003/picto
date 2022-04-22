@@ -1,6 +1,7 @@
 #include "ClickArea.as"
 #include "CanvasAction.as"
 #include "Palette.as"
+#include "Toolkit.as"
 #include "CanvasSync.as"
 #include "ArtistQueue.as"
 
@@ -12,6 +13,7 @@ class Canvas : ClickArea
 	uint height;
 
 	Palette@ palette;
+	Toolkit@ toolkit;
 
 	CanvasAction@[] actionsToSync;
 	CanvasAction@[] actionsToExecute;
@@ -28,6 +30,7 @@ class Canvas : ClickArea
 		Clear();
 
 		@palette = Palette();
+		@toolkit = Toolkit();
 	}
 
 	private void GenerateBackground()
@@ -263,6 +266,7 @@ class Canvas : ClickArea
 		if (isMyCanvas())
 		{
 			palette.Render();
+			toolkit.Render();
 		}
 	}
 
