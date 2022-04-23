@@ -22,9 +22,30 @@ void onRestart(CRules@ this)
 	canvas.Clear();
 }
 
+uint size = 6;
+
 void onTick(CRules@ this)
 {
 	canvas.Sync();
+
+	CControls@ controls = getControls();
+	if (controls.mouseScrollDown && size > 1)
+	{
+		size--;
+	}
+	if (controls.mouseScrollUp && size < 20)
+	{
+		size++;
+	}
+}
+
+void onRender(CRules@ this)
+{
+	if (canvas !is null)
+	{
+		DrawOnCanvas();
+		GUI::DrawText("Size: " + size, Vec2f(20, 100), color_white);
+	}
 }
 
 void Render(int)
@@ -57,23 +78,23 @@ void DrawOnCanvas()
 		if (controls.isKeyPressed(KEY_LBUTTON))
 		{
 			canvas.DrawLine(
-				Maths::Floor(prevMousePos.x),
-				Maths::Floor(prevMousePos.y),
-				Maths::Floor(mousePos.x),
-				Maths::Floor(mousePos.y),
+				prevMousePos.x,
+				prevMousePos.y,
+				mousePos.x,
+				mousePos.y,
 				canvas.palette.getSelectedColor(),
-				3
+				size
 			);
 		}
 		else if (controls.isKeyPressed(KEY_RBUTTON))
 		{
 			canvas.DrawLine(
-				Maths::Floor(prevMousePos.x),
-				Maths::Floor(prevMousePos.y),
-				Maths::Floor(mousePos.x),
-				Maths::Floor(mousePos.y),
+				prevMousePos.x,
+				prevMousePos.y,
+				mousePos.x,
+				mousePos.y,
 				0,
-				3
+				size
 			);
 		}
 	}

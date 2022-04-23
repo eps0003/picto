@@ -150,8 +150,8 @@ class Canvas : ClickArea
 		Vec2f dim = getDimensions();
 		Vec2f canvasPos = mousePos - pos;
 		return Vec2f(
-			Maths::Floor(canvasPos.x / dim.x * width),
-			Maths::Floor(canvasPos.y / dim.y * height)
+			canvasPos.x / dim.x * width,
+			canvasPos.y / dim.y * height
 		);
 	}
 
@@ -185,9 +185,15 @@ class Canvas : ClickArea
 	// Bresenham's line algorithm
 	// Reference: https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 	// Source: https://stackoverflow.com/a/4672319/10456572
-	void DrawLine(int x0, int y0, int x1, int y1, SColor color, u8 r = 1)
+	void DrawLine(float _x0, float _y0, float _x1, float _y1, SColor color, u8 size = 1)
 	{
-		QueueAction(LineAction(x0, y0, x1, y1, color, r));
+		QueueAction(LineAction(_x0, _y0, _x1, _y1, color, size));
+
+		bool even = size % 2 == 0;
+		int x0 = even ? Maths::Round(_x0) : Maths::Floor(_x0);
+		int y0 = even ? Maths::Round(_y0) : Maths::Floor(_y0);
+		int x1 = even ? Maths::Round(_x1) : Maths::Floor(_x1);
+		int y1 = even ? Maths::Round(_y1) : Maths::Floor(_y1);
 
 		int dx = Maths::Abs(x1 - x0);
 		int dy = Maths::Abs(y1 - y0);
@@ -196,20 +202,37 @@ class Canvas : ClickArea
 		s8 sy = y0 < y1 ? 1 : -1;
 
 		int err = dx - dy;
+		u8 r = size * 0.5f;
 		uint rSq = r * r;
 
 		ImageData@ image = Texture::data("canvas");
 
 		while (true)
 		{
-			for (int x = x0 - r; x <= x0 + r; x++)
-			for (int y = y0 - r; y <= y0 + r; y++)
-			{
-				uint distX = Maths::Abs(x - x0);
-				uint distY = Maths::Abs(y - y0);
-				uint distSq = distX * distX + distY * distY;
+			int left = Maths::Max(0, x0 - r);
+			int right = Maths::Min(width - 1, even ? x0 + r - 1 : x0 + r);
+			int top = Maths::Max(0, y0 - r);
+			int bottom = Maths::Min(height - 1, even ? y0 + r - 1 : y0 + r);
 
-				if (isValidPixel(x, y) && distSq <= rSq)
+			for (int x = left; x <= right; x++)
+			for (int y = top; y <= bottom; y++)
+			{
+				float x2 = even ? x + 0.5f : x;
+				float y2 = even ? y + 0.5f : y;
+
+				float distX = Maths::Abs(x2 - x0);
+				float distY = Maths::Abs(y2 - y0);
+
+				// Hack to make odd circles look rounder
+				if (!even)
+				{
+					distX -= 0.5f;
+					distY -= 0.5f;
+				}
+
+				float distSq = distX * distX + distY * distY;
+
+				if (size == 1 || distSq <= rSq)
 				{
 					image.put(x, y, color);
 				}
